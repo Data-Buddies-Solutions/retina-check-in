@@ -21,12 +21,12 @@ Requires Node 22 or 24. Run `npm ci`, `npm run build`, then `npm start`. Open ht
 
 ## Hosting
 
-The private GitHub repository is connected to the Acuity Health Vercel team. Vercel serves the Vite build and `/api/index.mjs` handles the API. `vercel.json` defines the routes.
+The public GitHub repository is connected to Kyle Shechtman’s Vercel project. Vercel serves the Vite build and `/api/index.mjs` handles the API. `vercel.json` defines the routes.
 
 1. Use the dedicated retina-check-in-db database in the existing Prisma Postgres integration. Production and development can share the weekend-test database; preview deployments should use a separate database before being enabled.
 2. Set DATABASE_URL, a private STAFF_PIN, and PUBLIC_SITE_URL in Vercel production.
 3. Apply the committed migration: `npx prisma migrate deploy` (with DATABASE_URL loaded).
-4. Deploy with `vercel --prod` or push to main after database setup. Database migrations are explicit, not run on every preview build.
+4. Deploy with `vercel --prod` or push to main after database setup. Production builds apply committed database migrations before building. Preview builds do not run migrations and need their own database configuration.
 
 Postgres holds attendees, signatures, staff sessions and login-attempt limits. There is no file-storage fallback on Vercel. Conditional signature updates prevent duplicate simultaneous submissions. Staff cookies are HTTP-only, SameSite=Strict, secure on Vercel, and expire after 12 hours; only hashed session tokens are stored. PIN attempts are limited to 20 per IP per 15 minutes.
 

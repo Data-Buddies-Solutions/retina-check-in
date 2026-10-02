@@ -12,7 +12,7 @@
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:clear": "node scripts/clear-data.mjs --confirm-clear",
-    "test": "node tests/demo.test.mjs"
+    "test": "node --test tests/api.test.mjs && node tests/demo.test.mjs"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",

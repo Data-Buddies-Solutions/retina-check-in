@@ -1,3 +1,4 @@
+import { api } from "./lib/api";
 import { useEffect, useRef, useState } from "react";
 import SignaturePad from "signature_pad";
 import {
@@ -45,13 +46,6 @@ type Person = {
   signedAt: string | null;
   walkIn: boolean;
 };
-async function api(url: string, options: RequestInit = {}) {
-  const response = await fetch(url, options);
-  const data = await response.json();
-  if (!response.ok)
-    throw new Error(data.error || "Something went wrong. Please try again.");
-  return data;
-}
 const post = (body: unknown) => ({
   method: "POST",
   headers: { "Content-Type": "application/json" },
