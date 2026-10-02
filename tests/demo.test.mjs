@@ -152,6 +152,15 @@ try {
   assert.equal(blankPerson.license, "");
   assert.equal(blankPerson.ce, "");
   assert.equal(blankPerson.paid, "");
+  const noteResult = await staff.request.post("http://localhost:4174/api/import?preview=true", {
+    multipart: { file: { name: "notes.csv", mimeType: "text/csv", buffer: Buffer.from(
+      "Name,License Number,CE Credit,Paid (Y/N)\nDr. Note Test,OPC,STATED HE IS NOT SURE,"
+    ) } },
+  });
+  assert.equal(noteResult.status(), 200);
+  const notePerson = (await noteResult.json()).attendees[0];
+  assert.equal(notePerson.ce, "?");
+  assert.equal(notePerson.ceNote, "STATED HE IS NOT SURE");
   const template = await staff.request.get(
     "http://localhost:4174/api/template",
   );
@@ -179,7 +188,7 @@ try {
       file: {
         name: "bad.csv",
         mimeType: "text/csv",
-        buffer: Buffer.from("Name,License Number,CE Credit\nBad,123,MAYBE"),
+        buffer: Buffer.from("Name,License Number,CE Credit\n,123,YES"),
       },
     },
   });

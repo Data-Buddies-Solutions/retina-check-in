@@ -1,0 +1,1 @@
+ALTER TABLE "Attendee" ADD COLUMN "ceNote" TEXT NOT NULL DEFAULT '';

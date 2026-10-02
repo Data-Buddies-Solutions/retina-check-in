@@ -190,25 +190,23 @@ app.post("/api/import", staff, upload.single("file"), async (req, res) => {
         const get = (label) => String(r[idx(label)] || "").trim();
         const name = get("name"),
           license = get("license number"),
-          ce = get("ce credit").toUpperCase(),
+          rawCe = get("ce credit"),
+          ce = ["", "YES", "NO", "?"].includes(rawCe.toUpperCase()) ? rawCe.toUpperCase() : "?",
+          ceNote = ["", "YES", "NO", "?"].includes(rawCe.toUpperCase()) ? "" : rawCe,
           paid = get("paid (y/n)").toUpperCase(),
           paidNote = get("payment note");
-        if (
-          !name ||
-          name.length > 150 ||
-          license.length > 80 ||
-          paidNote.length > 500 ||
-          !["", "YES", "NO", "?"].includes(ce) ||
-          !["YES", "NO", "N/A", ""].includes(paid)
-        )
-          throw Error(
-            `Check row ${rowNumber}: name, CE credit (YES/NO/? or blank), or paid status (YES/NO/N/A or blank).`,
-          );
+        if (!name) throw Error(`Row ${rowNumber}: name is missing.`);
+        for (const [field, value, max] of [["name", name, 150], ["license number", license, 80], ["CE note", ceNote, 500], ["payment note", paidNote, 500]]) {
+          if (value.length > max) throw Error(`Row ${rowNumber}: ${field} exceeds ${max} characters.`);
+        }
+        if (!["YES", "NO", "N/A", ""].includes(paid))
+          throw Error(`Row ${rowNumber}: paid status "${paid}" must be YES, NO, N/A, or blank.`);
         return {
           id: randomUUID(),
           name,
           license,
           ce,
+          ceNote,
           paid,
           paidNote,
           signature: null,
@@ -221,9 +219,9 @@ app.post("/api/import", staff, upload.single("file"), async (req, res) => {
     if (req.query.preview === "true")
       return res.json({ attendees: incoming, count: incoming.length });
     const count = await store.importRows(incoming);
-    const notes = incoming.filter((r) => r.paidNote).length;
+    const notes = incoming.filter((r) => r.paidNote || r.ceNote).length;
     res.json({
-      message: `Added ${count} attendees. Skipped ${incoming.length - count} existing or duplicate names. Existing signatures were kept.${notes ? ` ${notes} payment note(s) preserved for staff review.` : ""}`,
+      message: `Added ${count} attendees. Skipped ${incoming.length - count} existing or duplicate names. Existing signatures were kept.${notes ? ` ${notes} CE/payment note(s) preserved for staff review.` : ""}`,
     });
   } catch (e) {
     res.status(400).json({ error: e.message });

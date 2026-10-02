@@ -43,6 +43,7 @@ type Person = {
   ce: string;
   paid: string;
   paidNote?: string;
+  ceNote?: string;
   signature: string | null;
   signedAt: string | null;
   walkIn: boolean;
@@ -725,6 +726,7 @@ function Staff() {
                             options={["", "YES", "NO", "?"]}
                             onChange={(ce) => void edit(p, { ce })}
                           />
+                          {p.ceNote && <p className="payment-note">{p.ceNote}</p>}
                         </TableCell>
                         <TableCell>
                           <Choice
@@ -793,7 +795,7 @@ function Staff() {
                 <tr key={p.id}>
                   <td>{p.name}</td>
                   <td>{p.license}</td>
-                  <td>{p.ce}</td>
+                  <td>{p.ce}{p.ceNote && <small className="print-payment-note">{p.ceNote}</small>}</td>
                   <td>
                     {p.paid}
                     {p.paidNote && (
