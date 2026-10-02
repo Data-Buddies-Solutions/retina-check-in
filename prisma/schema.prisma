@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Attendee {
+  id                       String   @id @default(uuid())
+  name                     String
+  nameKey                  String   @unique
+  license                  String
+  ce                       String   @default("?")
+  paid                     String   @default("")
+  signature                String?
+  signedAt                 DateTime?
+  walkIn                   Boolean  @default(false)
+  attendeeConfirmedDetails Json?
+  createdAt                DateTime @default(now())
+}
+
+model StaffSession {
+  tokenHash String   @id
+  expiresAt DateTime
+}
+
+model LoginAttempt {
+  key       String   @id
+  count     Int      @default(1)
+  expiresAt DateTime
+}

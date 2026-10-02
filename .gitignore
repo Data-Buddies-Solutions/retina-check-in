@@ -30,3 +30,9 @@ data/
 .vercel/
 test-results/
 playwright-report/
+.vercel
+.env*.local
+
+# CLI-provisioned helper skills
+.agents/
+skills-lock.json

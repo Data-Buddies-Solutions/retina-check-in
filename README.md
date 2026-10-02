@@ -1,42 +1,39 @@
-# Retina Consultants of Miami — CE event check-in
+# Retina Consultants of Miami — event check-in
 
-Local demo built with React, TypeScript, shadcn/ui and Express. Uses the supplied branding. Starts with an empty attendee list.
+A simple phone/tablet check-in site using React, shadcn/ui, Express, Prisma, and Postgres. The attendee list starts empty.
 
-## Open the demo
+## Event team
 
-- Attendee: http://localhost:4173
-- Staff: http://localhost:4173/staff
-- Demo staff PIN: **2468**
+- Open `/staff` and enter the staff PIN supplied separately.
+- Download the Excel template, add attendees, then upload `.xlsx` or CSV (up to 4 MB and 2,000 rows).
+- Required headers: **Name**, **License Number**. Optional: **CE Credit** (YES / NO / ?), **Paid (Y/N)** (YES / NO / N/A / blank).
+- Uploads add new names, skipping existing names case-insensitively. They never overwrite existing signatures.
+- Share the attendee homepage or the dashboard's **Check-in QR**.
+- Attendees select their name, confirm or edit their details, sign with a finger/mouse, and submit. “I’m not listed” adds a walk-in for follow-up.
+- Payment status is attendee-reported. This app does not process or independently verify payments.
+- The dashboard updates every five seconds. Staff can edit license, CE and paid fields. License edits save on blur.
+- **Print sign-in sheet** prints all attendees and signatures in the original five columns, including unsigned rows. Use Letter landscape and turn off browser headers/footers. The browser can also save it as a PDF.
+- **Download backup** exports all records and signature images as JSON. The original attendee-confirmed details are retained even if staff later edit fields.
 
-Start with `npm install`, `npm run build`, then `npm start` from this folder. The running demo serves the built files; rebuild after source changes.
+## Local development
 
-For phones, open **Staff → Check-in QR**. Connect the computer and phones to the same Wi-Fi, keep the computer awake, and scan the QR. Guest networks that isolate devices may prevent access; a shared tablet/computer also works. This is a local HTTP demo, not an internet deployment. Change the staff PIN with `STAFF_PIN=your-pin npm start` before using beyond a demo.
+Requires Node 22 or 24. Run `npm ci`, `npm run build`, then `npm start`. Open http://localhost:4173. Without DATABASE_URL, data is stored in ignored `data/attendees.json` and the local demo PIN is 2468. With DATABASE_URL, Prisma uses Postgres. Load local environment variables explicitly with `node --env-file=.env server.mjs` when using Postgres.
 
-## Sign and print
+## Hosting
 
-1. Select or search for an attendee, confirm or edit name, OPC/license number, CE credit, and paid status, then draw a signature and submit. The signature confirms attendance and those details. Payment status is attendee-reported, not payment processing; the submitted details are retained in the backup as attendeeConfirmedDetails.
-2. Use “Next attendee” for a shared device. “I’m not listed” collects name and license number and flags that person for staff follow-up.
-3. Staff can edit license, CE credit and payment status. License edits save when the field loses focus. The dashboard refreshes every 5 seconds.
-4. Choose **Print sign-in sheet** in Staff. Print or save as PDF. Use Letter, landscape; turn off browser headers/footers. All attendees appear in the original five-column format, including unsigned rows. Search filters do not limit printing.
+The private GitHub repository is connected to the Acuity Health Vercel team. Vercel serves the Vite build and `/api/index.mjs` handles the API. `vercel.json` defines the routes.
 
-Signatures and guest details save on this computer in `data/attendees.json`; they survive restarting the server. **Download backup** exports the full roster and signatures. Staff sessions require logging in again after a restart. Do not run multiple server processes against the same data file.
+1. Use the dedicated retina-check-in-db database in the existing Prisma Postgres integration. Production and development can share the weekend-test database; preview deployments should use a separate database before being enabled.
+2. Set DATABASE_URL, a private STAFF_PIN, and PUBLIC_SITE_URL in Vercel production.
+3. Apply the committed migration: `npx prisma migrate deploy` (with DATABASE_URL loaded).
+4. Deploy with `vercel --prod` or push to main after database setup. Database migrations are explicit, not run on every preview build.
 
-## Upload a list
+Postgres holds attendees, signatures, staff sessions and login-attempt limits. There is no file-storage fallback on Vercel. Conditional signature updates prevent duplicate simultaneous submissions. Staff cookies are HTTP-only, SameSite=Strict, secure on Vercel, and expire after 12 hours; only hashed session tokens are stored. PIN attempts are limited to 20 per IP per 15 minutes.
 
-Download the Excel template in Staff, fill it in, and upload `.xlsx` or CSV (5 MB maximum, up to 2,000 rows). The first worksheet is used.
+## Reset for a new test
 
-Headers: **Name**, **License Number**, **CE Credit**, **Paid (Y/N)**.
-
-- Name and License Number columns are required.
-- CE Credit: YES, NO, or ? (blank becomes ?).
-- Paid (Y/N): YES, NO, N/A, or blank.
-- Uploads add new names. Existing names are matched case-insensitively and skipped, preserving their data and signatures. Invalid uploads are rejected before any rows are added.
-- For this demo, uploads do not replace the roster or import signatures. PDF upload is not supported; the provided PDF was transcribed into the initial list.
-
-
+Download a backup first if needed. Run `node --env-file=.env.production scripts/clear-data.mjs --confirm-clear` with the intended database configured. This permanently deletes all attendee records and signatures in that database. It does not clear unrelated data or databases.
 
 ## Verification
 
-`node tests/demo.test.mjs` runs an isolated server on port 4174 with test data under the workspace's `work/verification` directory. Requires Google Chrome. Covers desktop and mobile layouts, drawing/submitting, duplicates, staff access, payment edits, CSV and Excel imports, invalid uploads, walk-ins, persistence to disk, QR generation, and print styling. `npm run build` checks TypeScript and builds the app.
-
-This demo uses a shared staff PIN and an attendee name list, not identity verification. It is intended for reviewing the check-in flow locally. Internet hosting and production access controls are outside this demo.
+`npm run build` checks TypeScript and builds. `npm test` runs the browser flow against isolated local test data on port 4174 and requires Google Chrome. It covers mobile/desktop, editable confirmation, signing, duplicates, staff access, payment edits, CSV/XLSX import, invalid uploads, walk-ins, print layout, persistence and QR generation. Hosted database and deployment checks must also run before sharing a live link.
