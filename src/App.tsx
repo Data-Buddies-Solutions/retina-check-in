@@ -150,7 +150,7 @@ function SignForm({
     pad = useRef<SignaturePad | null>(null);
   const [name, setName] = useState(person?.name || ""),
     [license, setLicense] = useState(person?.license || ""),
-    [ce, setCe] = useState(person?.ce || "?"),
+    [ce, setCe] = useState(person?.ce ?? ""),
     [paid, setPaid] = useState(person?.paid || ""),
     [ink, setInk] = useState(false),
     [busy, setBusy] = useState(false),
@@ -239,7 +239,7 @@ function SignForm({
             <Choice
               label="CE credit requested"
               value={ce}
-              options={["YES", "NO", "?"]}
+              options={["", "YES", "NO", "?"]}
               onChange={setCe}
             />
           </div>
@@ -722,7 +722,7 @@ function Staff() {
                           <Choice
                             label={`CE credit for ${p.name}`}
                             value={p.ce}
-                            options={["YES", "NO", "?"]}
+                            options={["", "YES", "NO", "?"]}
                             onChange={(ce) => void edit(p, { ce })}
                           />
                         </TableCell>

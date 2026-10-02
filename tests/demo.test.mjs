@@ -139,6 +139,19 @@ try {
   );
   assert.equal(imported.status(), 200);
   assert.match((await imported.json()).message, /Added 1 attendees/);
+  const blankResult = await staff.request.post("http://localhost:4174/api/import", {
+    multipart: { file: { name: "blanks.csv", mimeType: "text/csv", buffer: Buffer.from(
+      "Name,License Number,CE Credit,Paid (Y/N)\nDr. Blank Details,,,\n,,,"
+    ) } },
+  });
+  assert.equal(blankResult.status(), 200);
+  assert.match((await blankResult.json()).message, /Added 1 attendees/);
+  const blankRoster = await (await staff.request.get("http://localhost:4174/api/staff")).json();
+  const blankPerson = blankRoster.find((p) => p.name === "Dr. Blank Details");
+  assert.ok(blankPerson);
+  assert.equal(blankPerson.license, "");
+  assert.equal(blankPerson.ce, "");
+  assert.equal(blankPerson.paid, "");
   const template = await staff.request.get(
     "http://localhost:4174/api/template",
   );
@@ -202,10 +215,10 @@ try {
   const finalRows = await (
     await staff.request.get("http://localhost:4174/api/staff")
   ).json();
-  assert.equal(finalRows.length, 15);
+  assert.equal(finalRows.length, 16);
   assert.equal(finalRows.at(-1).walkIn, true);
   assert.equal(finalRows[0].signature, rows[0].signature);
-  assert.equal(JSON.parse(fs.readFileSync(data)).length, 15);
+  assert.equal(JSON.parse(fs.readFileSync(data)).length, 16);
   const unauthorized = await phone.request.get(
     "http://localhost:4174/api/staff",
   );

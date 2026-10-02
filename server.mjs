@@ -122,7 +122,7 @@ app.post("/api/sign", async (req, res) => {
       .status(400)
       .json({ error: "Enter your name and license number (or N/A)." });
   if (
-    !["YES", "NO", "?"].includes(ce) ||
+    !["", "YES", "NO", "?"].includes(ce) ||
     !["YES", "NO", "N/A", ""].includes(paid)
   )
     return res
@@ -137,7 +137,7 @@ app.patch("/api/staff/:id", staff, async (req, res) => {
   if (!person) return res.status(404).json({ error: "Attendee not found." });
   const { ce, paid, license } = req.body;
   if (
-    !["YES", "NO", "?"].includes(ce) ||
+    !["", "YES", "NO", "?"].includes(ce) ||
     !["YES", "NO", "N/A", ""].includes(paid) ||
     typeof license !== "string" ||
     license.length > 80
@@ -184,12 +184,13 @@ app.post("/api/import", staff, upload.single("file"), async (req, res) => {
         "The first row must include Name and License Number. Download the template for an example.",
       );
     const incoming = matrix
-      .filter((r) => r.some((v) => String(v).trim()))
-      .map((r, i) => {
+      .map((r, i) => ({ r, rowNumber: i + 2 }))
+      .filter(({ r }) => r.some((v) => String(v ?? "").trim()))
+      .map(({ r, rowNumber }) => {
         const get = (label) => String(r[idx(label)] || "").trim();
         const name = get("name"),
           license = get("license number"),
-          ce = get("ce credit").toUpperCase() || "?",
+          ce = get("ce credit").toUpperCase(),
           paid = get("paid (y/n)").toUpperCase(),
           paidNote = get("payment note");
         if (
@@ -197,11 +198,11 @@ app.post("/api/import", staff, upload.single("file"), async (req, res) => {
           name.length > 150 ||
           license.length > 80 ||
           paidNote.length > 500 ||
-          !["YES", "NO", "?"].includes(ce) ||
+          !["", "YES", "NO", "?"].includes(ce) ||
           !["YES", "NO", "N/A", ""].includes(paid)
         )
           throw Error(
-            `Check row ${i + 2}: name, CE credit (YES/NO/?), or paid status (YES/NO/N/A).`,
+            `Check row ${rowNumber}: name, CE credit (YES/NO/? or blank), or paid status (YES/NO/N/A or blank).`,
           );
         return {
           id: randomUUID(),
