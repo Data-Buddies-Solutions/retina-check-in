@@ -13,6 +13,7 @@ model Attendee {
   license                  String
   ce                       String   @default("?")
   paid                     String   @default("")
+  paidNote                 String   @default("")
   signature                String?
   signedAt                 DateTime?
   walkIn                   Boolean  @default(false)

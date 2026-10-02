@@ -18,7 +18,8 @@
   ],
   "functions": {
     "api/index.mjs": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "node_modules/pdfjs-dist/{legacy/build/*.mjs,standard_fonts/**}"
     }
   }
 }

@@ -5,7 +5,7 @@ A simple phone/tablet check-in site using React, shadcn/ui, Express, Prisma, and
 ## Event team
 
 - Open `/staff` and enter the staff PIN supplied separately.
-- Download the Excel template, add attendees, then upload `.xlsx` or CSV (up to 4 MB and 2,000 rows).
+- Download the Excel template, add attendees, then upload PDF, `.xlsx` or CSV (up to 4 MB and 2,000 rows).
 - Required headers: **Name**, **License Number**. Optional: **CE Credit** (YES / NO / ?), **Paid (Y/N)** (YES / NO / N/A / blank).
 - Uploads add new names, skipping existing names case-insensitively. They never overwrite existing signatures.
 - Share the attendee homepage or the dashboard's **Check-in QR**.
@@ -14,6 +14,8 @@ A simple phone/tablet check-in site using React, shadcn/ui, Express, Prisma, and
 - The dashboard updates every five seconds. Staff can edit license, CE and paid fields. License edits save on blur.
 - **Print sign-in sheet** prints all attendees and signatures in the original five columns, including unsigned rows. Use Letter landscape and turn off browser headers/footers. The browser can also save it as a PDF.
 - **Download backup** exports all records and signature images as JSON. The original attendee-confirmed details are retained even if staff later edit fields.
+
+PDF uploads support the supplied five-column sign-in format, including fillable forms and selectable text across multiple pages (up to 30). Scanned photos and password-protected PDFs are not supported. Payment-cell notes are preserved separately for staff review and printing; they are never treated as proof of payment. Existing signatures in a PDF are not imported.
 
 ## Local development
 

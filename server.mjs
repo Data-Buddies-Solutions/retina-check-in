@@ -106,12 +106,10 @@ app.post("/api/sign", async (req, res) => {
       .status(404)
       .json({ error: "Attendee not found. Please select your name again." });
   if (person?.signedAt)
-    return res
-      .status(409)
-      .json({
-        error:
-          "You are already signed in. Please see the registration desk for changes.",
-      });
+    return res.status(409).json({
+      error:
+        "You are already signed in. Please see the registration desk for changes.",
+    });
   if (
     typeof name !== "string" ||
     !name.trim() ||
@@ -160,9 +158,12 @@ const cell = (v) =>
       : String(v);
 app.post("/api/import", staff, upload.single("file"), async (req, res) => {
   try {
-    if (!req.file) throw Error("Choose a CSV or .xlsx file.");
+    if (!req.file) throw Error("Choose a PDF, CSV or .xlsx file.");
     let matrix;
-    if (req.file.originalname.toLowerCase().endsWith(".csv"))
+    if (req.file.originalname.toLowerCase().endsWith(".pdf")) {
+      const { readSignInPdf } = await import("./lib/pdf-import.mjs");
+      matrix = await readSignInPdf(req.file.buffer);
+    } else if (req.file.originalname.toLowerCase().endsWith(".csv"))
       matrix = parse(req.file.buffer, { bom: true, skip_empty_lines: true });
     else if (req.file.originalname.toLowerCase().endsWith(".xlsx")) {
       const wb = new ExcelJS.Workbook();
@@ -175,7 +176,7 @@ app.post("/api/import", staff, upload.single("file"), async (req, res) => {
           ),
         ),
       );
-    } else throw Error("Use a CSV or .xlsx file.");
+    } else throw Error("Use a PDF, CSV or .xlsx file.");
     const headers = matrix.shift()?.map((v) => String(v).trim().toLowerCase());
     const idx = (label) => headers?.indexOf(label);
     if (idx("name") < 0 || idx("license number") < 0)
@@ -189,11 +190,13 @@ app.post("/api/import", staff, upload.single("file"), async (req, res) => {
         const name = get("name"),
           license = get("license number"),
           ce = get("ce credit").toUpperCase() || "?",
-          paid = get("paid (y/n)").toUpperCase();
+          paid = get("paid (y/n)").toUpperCase(),
+          paidNote = get("payment note");
         if (
           !name ||
           name.length > 150 ||
           license.length > 80 ||
+          paidNote.length > 500 ||
           !["YES", "NO", "?"].includes(ce) ||
           !["YES", "NO", "N/A", ""].includes(paid)
         )
@@ -206,6 +209,7 @@ app.post("/api/import", staff, upload.single("file"), async (req, res) => {
           license,
           ce,
           paid,
+          paidNote,
           signature: null,
           signedAt: null,
           walkIn: false,
@@ -213,9 +217,12 @@ app.post("/api/import", staff, upload.single("file"), async (req, res) => {
       });
     if (!incoming.length || incoming.length > 2000)
       throw Error("Upload between 1 and 2,000 attendees.");
+    if (req.query.preview === "true")
+      return res.json({ attendees: incoming, count: incoming.length });
     const count = await store.importRows(incoming);
+    const notes = incoming.filter((r) => r.paidNote).length;
     res.json({
-      message: `Added ${count} attendees. Skipped ${incoming.length - count} existing or duplicate names. Existing signatures were kept.`,
+      message: `Added ${count} attendees. Skipped ${incoming.length - count} existing or duplicate names. Existing signatures were kept.${notes ? ` ${notes} payment note(s) preserved for staff review.` : ""}`,
     });
   } catch (e) {
     res.status(400).json({ error: e.message });
@@ -264,15 +271,13 @@ app.get("/{*splat}", (_req, res) =>
 );
 app.use((err, _req, res, _next) => {
   console.error(err.message);
-  res
-    .status(err.status || 400)
-    .json({
-      error: err.status
-        ? err.message
-        : err.code === "LIMIT_FILE_SIZE"
-          ? "The upload must be under 4 MB."
-          : "The request could not be saved. Please try again.",
-    });
+  res.status(err.status || 400).json({
+    error: err.status
+      ? err.message
+      : err.code === "LIMIT_FILE_SIZE"
+        ? "The upload must be under 4 MB."
+        : "The request could not be saved. Please try again.",
+  });
 });
 export default app;
 if (

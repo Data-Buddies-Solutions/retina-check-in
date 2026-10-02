@@ -1111,3 +1111,16 @@ a {
 .attendee-shell .signing-card .signature-box canvas {
   height: 155px;
 }
+
+.payment-note {
+  font-size: 10px;
+  color: #617887;
+  white-space: normal;
+  max-width: 160px;
+  margin-top: 6px;
+}
+.print-payment-note {
+  display: block;
+  font-size: 9px;
+  margin-top: 3px;
+}

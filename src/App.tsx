@@ -42,6 +42,7 @@ type Person = {
   license: string;
   ce: string;
   paid: string;
+  paidNote?: string;
   signature: string | null;
   signedAt: string | null;
   walkIn: boolean;
@@ -638,7 +639,7 @@ function Staff() {
                 <input
                   ref={upload}
                   type="file"
-                  accept=".csv,.xlsx"
+                  accept=".pdf,.csv,.xlsx"
                   hidden
                   onChange={(e) => void importFile(e.target.files?.[0])}
                 />
@@ -732,6 +733,9 @@ function Staff() {
                             options={["", "YES", "NO", "N/A"]}
                             onChange={(paid) => void edit(p, { paid })}
                           />
+                          {p.paidNote && (
+                            <p className="payment-note">{p.paidNote}</p>
+                          )}
                         </TableCell>
                         <TableCell>
                           {p.signature ? (
@@ -755,8 +759,8 @@ function Staff() {
             </Card>
             <div className="dashboard-footer">
               <p>
-                CSV or Excel (.xlsx) uploads add new attendees. Existing names
-                and signatures are kept.
+                PDF, CSV or Excel (.xlsx) uploads add new attendees. Existing
+                names and signatures are kept.
               </p>
               <a href="/api/backup">
                 Download backup <Download size={14} />
@@ -790,7 +794,12 @@ function Staff() {
                   <td>{p.name}</td>
                   <td>{p.license}</td>
                   <td>{p.ce}</td>
-                  <td>{p.paid}</td>
+                  <td>
+                    {p.paid}
+                    {p.paidNote && (
+                      <small className="print-payment-note">{p.paidNote}</small>
+                    )}
+                  </td>
                   <td>
                     {p.signature && (
                       <img src={p.signature} alt={`Signature of ${p.name}`} />
