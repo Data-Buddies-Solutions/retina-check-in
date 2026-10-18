@@ -237,6 +237,25 @@ try {
   ).json();
   assert.match(connection.qr, /^data:image\/png/);
   assert.equal(errors.length, 0);
+  await staff.getByRole("button", { name: "Add attendee", exact: true }).click();
+  await staff.getByLabel("Full name", { exact: true }).fill("Dr. Staff Added");
+  await staff.getByLabel("License number (optional)").fill("TEST 456");
+  await staff.getByLabel("CE credit", { exact: true }).selectOption("YES");
+  await staff.getByLabel("Paid", { exact: true }).selectOption("NO");
+  await staff.getByRole("button", { name: "Save attendee" }).click();
+  await staff.getByRole("status").filter({ hasText: "Dr. Staff Added added." }).waitFor();
+  const manual = (await (await staff.request.get("http://localhost:4174/api/staff")).json()).find(p => p.name === "Dr. Staff Added");
+  assert.equal(manual.license, "TEST 456");
+  assert.equal(manual.signedAt, null);
+  await staff.getByRole("button", { name: "Add attendee", exact: true }).click();
+  await staff.getByLabel("Full name", { exact: true }).fill("dr. staff added");
+  await staff.getByRole("button", { name: "Save attendee" }).click();
+  await staff.getByRole("alert").filter({ hasText: "already on the list" }).waitFor();
+  assert.equal(await staff.getByLabel("Full name", { exact: true }).inputValue(), "dr. staff added");
+  await staff.setViewportSize({ width: 390, height: 844 });
+  assert.ok(await staff.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "staff controls fit mobile width");
+  await staff.screenshot({ path: path.join(scratch, "staff-add-mobile.png"), fullPage: true });
+  await staff.getByRole("button", { name: "Cancel", exact: true }).click();
   console.log(
     "PASS: desktop/mobile, drawn signature, duplicate protection, staff permissions, paid edit, print layout, CSV/XLSX imports, invalid upload, walk-in, disk persistence, QR, no browser errors.",
   );

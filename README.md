@@ -5,6 +5,7 @@ A simple phone/tablet check-in site using React, shadcn/ui, Express, Prisma, and
 ## Event team
 
 - Open `/staff` and enter the staff PIN supplied separately.
+- Use **Add attendee** to enter a guest manually. Only a name is required; the guest completes their details and signature during check-in. Existing names are rejected case-insensitively.
 - Download the Excel template, add attendees, then upload PDF, `.xlsx` or CSV (up to 4 MB and 2,000 rows).
 - Required headers: **Name**, **License Number**. Optional: **CE Credit** (YES / NO / ?), **Paid (Y/N)** (YES / NO / N/A / blank).
 - Uploads add new names, skipping existing names case-insensitively. They never overwrite existing signatures.

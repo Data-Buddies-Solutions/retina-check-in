@@ -132,6 +132,24 @@ app.post("/api/sign", async (req, res) => {
   const signed = await store.sign(id, details, signature);
   res.json({ ok: true, name: signed.name });
 });
+app.post("/api/staff", staff, async (req, res) => {
+  const { name, license, ce, paid } = req.body;
+  if (
+    typeof name !== "string" || !name.trim() || name.length > 150 ||
+    typeof license !== "string" || license.length > 80 ||
+    !["", "YES", "NO", "?"].includes(ce) ||
+    !["", "YES", "NO", "N/A"].includes(paid)
+  )
+    return res.status(400).json({ error: "Enter a name and valid attendee details." });
+  const person = {
+    id: randomUUID(), name: name.trim(), license: license.trim(), ce, paid,
+    ceNote: "", paidNote: "", signature: null, signedAt: null, walkIn: false,
+  };
+  const count = await store.importRows([person]);
+  if (!count)
+    return res.status(409).json({ error: "That name is already on the list. Search for the existing attendee." });
+  res.status(201).json(person);
+});
 app.patch("/api/staff/:id", staff, async (req, res) => {
   const person = await store.get(req.params.id);
   if (!person) return res.status(404).json({ error: "Attendee not found." });
