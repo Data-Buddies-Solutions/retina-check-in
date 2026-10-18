@@ -465,6 +465,10 @@ function Staff() {
       qr: string;
       local: boolean;
     } | null>(null),
+    [showAdd, setShowAdd] = useState(false),
+    [adding, setAdding] = useState(false),
+    [addError, setAddError] = useState(""),
+    [draft, setDraft] = useState({ name: "", license: "", ce: "", paid: "" }),
     [showQR, setShowQR] = useState(false),
     [busy, setBusy] = useState(false);
   const upload = useRef<HTMLInputElement>(null);
@@ -509,6 +513,25 @@ function Staff() {
       await refresh();
     } catch (e) {
       setError((e as Error).message);
+    }
+  }
+  async function addAttendee(e: React.FormEvent) {
+    e.preventDefault();
+    if (adding) return;
+    setAdding(true);
+    setAddError("");
+    setNotice("");
+    try {
+      const person = await api("/api/staff", post(draft));
+      setDraft({ name: "", license: "", ce: "", paid: "" });
+      setShowAdd(false);
+      setQuery("");
+      setNotice(`${person.name} added. They can now select their name and sign in.`);
+      await refresh();
+    } catch (e) {
+      setAddError((e as Error).message);
+    } finally {
+      setAdding(false);
     }
   }
   async function importFile(file?: File) {
@@ -625,6 +648,9 @@ function Staff() {
                 />
               </div>
               <div className="tools">
+                <Button variant="outline" aria-expanded={showAdd} aria-controls="add-attendee" disabled={adding} onClick={() => setShowAdd(!showAdd)}>
+                  <Users size={17} /> Add attendee
+                </Button>
                 <Button variant="outline" onClick={() => setShowQR(!showQR)}>
                   <QrCode size={17} /> Check-in QR
                 </Button>
@@ -646,6 +672,41 @@ function Staff() {
                 />
               </div>
             </div>
+            {showAdd && (
+              <Card id="add-attendee" className="add-attendee-card">
+                <h2>Add attendee</h2>
+                <p className="muted">Add a guest to the list. They will still need to sign in.</p>
+                <form onSubmit={addAttendee}>
+                  <fieldset disabled={adding} className="add-attendee-fields">
+                    <div>
+                      <Label htmlFor="add-name">Full name</Label>
+                      <Input id="add-name" autoFocus required maxLength={150} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label htmlFor="add-license">License number (optional)</Label>
+                      <Input id="add-license" maxLength={80} value={draft.license} onChange={(e) => setDraft({ ...draft, license: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label htmlFor="add-ce">CE credit</Label>
+                      <select id="add-ce" value={draft.ce} onChange={(e) => setDraft({ ...draft, ce: e.target.value })}>
+                        <option value="">Not specified</option><option>YES</option><option>NO</option><option value="?">Unsure</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="add-paid">Paid</Label>
+                      <select id="add-paid" value={draft.paid} onChange={(e) => setDraft({ ...draft, paid: e.target.value })}>
+                        <option value="">Not specified</option><option>YES</option><option>NO</option><option>N/A</option>
+                      </select>
+                    </div>
+                  </fieldset>
+                  {addError && <p role="alert" className="error">{addError}</p>}
+                  <div className="add-attendee-actions">
+                    <Button type="submit" disabled={adding || !draft.name.trim()}>{adding ? "Adding…" : "Save attendee"}</Button>
+                    <Button type="button" variant="ghost" disabled={adding} onClick={() => { setShowAdd(false); setAddError(""); }}>Cancel</Button>
+                  </div>
+                </form>
+              </Card>
+            )}
             {showQR && connection && (
               <Card className="qr-card">
                 <img

@@ -525,6 +525,7 @@ a {
 }
 .tools {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
 }
@@ -1124,3 +1125,10 @@ a {
   font-size: 9px;
   margin-top: 3px;
 }
+
+.add-attendee-card { padding: 24px; margin-bottom: 20px; }
+.add-attendee-fields { border: 0; padding: 0; margin: 16px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.add-attendee-fields label { margin-bottom: 8px; }
+.add-attendee-fields select { width: 100%; min-height: 36px; border: 1px solid var(--border); border-radius: 6px; background: white; padding: 6px 10px; font: inherit; }
+.add-attendee-actions { display: flex; gap: 8px; }
+@media (max-width: 600px) { .add-attendee-fields { grid-template-columns: 1fr; } }
